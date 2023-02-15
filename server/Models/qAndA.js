@@ -22,8 +22,10 @@ const QuestionSchema = new Schema({
 });
 
 const ProductSchema = new Schema({
-  product_id: String,
+  product_id: Number,
   results: [QuestionSchema],
 });
 
-module.exports = mongoose.model('Product', ProductSchema);
+// module.exports.
+  // module.exports = mongoose.model('Product', ProductSchema);
+module.exports = { QuestionModel: mongoose.model('Question', QuestionSchema), ProductModel: mongoose.model('Product', ProductSchema), AnswerModel: mongoose.model('Answer', AnswerSchema) };
