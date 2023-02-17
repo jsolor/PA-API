@@ -8,3 +8,4 @@ yarn.lock
 coverage
 yarn-error.log
 server/TestData/*
+server/Reviews/*
