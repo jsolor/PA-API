@@ -10,8 +10,6 @@ const client = new Client({
 });
 
 async function productsETL() {
-  await client.connect();
-
   client
     .query(`
       CREATE TABLE IF NOT EXISTS products (
@@ -30,7 +28,7 @@ async function productsETL() {
         CSV HEADER
     `))
     // .then((res) => console.log(res))
-    .catch((e) => console.log(e)); // .finally(() => client.end());
+    .catch((e) => console.log(e));
 
   client
     .query(`
@@ -49,12 +47,12 @@ async function productsETL() {
         CSV HEADER
     `))
     // .then((res) => console.log(res))
-    .catch((e) => console.log(e)); // .finally(() => client.end());
+    .catch((e) => console.log(e));
 
   client
     .query(`
       CREATE TABLE IF NOT EXISTS styles (
-        id INTEGER PRIMARY KEY,
+        style_id INTEGER PRIMARY KEY,
         product_id INTEGER
           REFERENCES products(id),
         name VARCHAR (30),
@@ -70,7 +68,7 @@ async function productsETL() {
         CSV HEADER
     `))
     // .then((res) => console.log(res))
-    .catch((e) => console.log(e)); // .finally(() => client.end());
+    .catch((e) => console.log(e));
 
   client
     .query(`
@@ -89,7 +87,7 @@ async function productsETL() {
         CSV HEADER
     `))
     // .then((res) => console.log(res))
-    .catch((e) => console.log(e)); // .finally(() => client.end());
+    .catch((e) => console.log(e));
 
   client
     .query(`
@@ -108,7 +106,7 @@ async function productsETL() {
         CSV HEADER
     `))
     // .then((res) => console.log(res))
-    .catch((e) => console.log(e)); // .finally(() => client.end());
+    .catch((e) => console.log(e));
 
   client
     .query(`
@@ -127,14 +125,10 @@ async function productsETL() {
         CSV HEADER
         NULL '0'
         WHERE current_product_id IS NOT NULL AND related_product_id IS NOT NULL
-    `))
-    // .then((res) => console.log(res))
-    .catch((e) => console.log(e)); // .finally(() => client.end());
+    `));
 }
 
 async function productsETL2() {
-  await client.connect();
-
   client
     .query(`
       CREATE TABLE IF NOT EXISTS categories (
@@ -166,11 +160,59 @@ async function productsETL2() {
     .then(() => client.query(`
         ALTER TABLE products
         DROP COLUMN category
-    `))
-    // .then((res) => console.log(res))
-    .catch((e) => console.log(e))
-    .finally(() => client.end());
+    `));
 }
 
-productsETL();
-productsETL2();
+async function getProduct(pid) {
+  const prod = {};
+
+  return client
+    .query(`
+      SELECT
+        products.id, products.name, products.slogan, products.description, products.default_price, categories.category
+      FROM products, categories
+      WHERE products.id = ${pid} AND products.category_id = categories.id
+    `)
+    .then(({ rows }) => prod.info = rows)
+    .then(() => client.query(`
+      SELECT feature, value
+      FROM features
+      WHERE product_id = ${pid}
+    `))
+    .then(({ rows }) => {
+      prod.info.features = rows;
+      return prod;
+    });
+}
+
+async function getProducts(page = 1, count = 5) {
+  const start = ((page - 1) * count) + 1;
+  const range = [...Array(count).keys()].map((n, index) => start + index);
+
+  const prods = {};
+  return client
+    .query(`
+      SELECT
+        products.id, products.name, products.slogan, products.description, products.default_price, categories.category
+      FROM products, categories
+      WHERE products.id IN (${range.toString()}) AND products.category_id = categories.id
+    `)
+    .then(({ rows }) => rows);
+}
+
+async function getRelatedProducts(pid) {
+  return client
+    .query(`
+      SELECT related_product_id
+      FROM related
+      WHERE current_product_id = ${pid}
+    `)
+    .then(({ rows }) => rows.map((row) => row.related_product_id));
+}
+
+// productsETL();
+// productsETL2();
+module.exports.client = client;
+module.exports.getProduct = getProduct;
+module.exports.getProducts = getProducts;
+module.exports.getRelatedProducts = getRelatedProducts;
