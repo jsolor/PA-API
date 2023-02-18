@@ -142,7 +142,7 @@ async function buildRecommendTable() {
 
   db
     .query(`
-      SELECT product_id, id, recommend, count
+      SELECT product_id, id PRIMARY KEY, recommend, count
       INTO recommended
       FROM (
         SELECT
@@ -158,6 +158,30 @@ async function buildRecommendTable() {
 }
 
 // buildRecommendTable();
+
+async function buildRecommendCountTable() {
+  await db.connect();
+
+  await db
+    .query('DROP TABLE IF EXISTS recommended_count;');
+
+  db
+    .query(`
+      SELECT product_id, recommend, count
+      INTO recommended_count
+      FROM (
+        SELECT
+          product_id,
+          recommend,
+          count(recommend) as count
+          FROM reviews GROUP BY product_id, recommend
+      ) as s;`)
+    .then((res) => console.log(res))
+    .catch((e) => console.log(e))
+    .finally(() => db.end());
+}
+
+// buildRecommendCountTable();
 
 async function buildCharacteristicsTable() {
   await db.connect();

@@ -109,36 +109,41 @@ router.put('/reviews/:review_id/report', (req, res) => {
 });
 
 router.post('/reviews', (req, res) => {
-  console.log('marking helpful');
-  const { review_id } = req.params;
+  console.log('adding a new review');
+
+  const date = Math.floor(new Date().getTime() / 1000).toString();
+  let { photos } = req.query;
+  photos = `'{${JSON.stringify(photos).slice(2, -2)}}'`;
 
   db.query(`
     BEGIN;
 
-    UPDATE recommended
-      SET count = count + 1
-      WHERE product_id = ${req.query.product_id} AND recommend = ${String(req.query.recommend)};
-    INSERT INTO reviews (product_id, rating, summary, body, recommend, reviewer_name, reviewer_email, date)
-      VALUES (
-        ${req.query.product_id},
-        ${req.query.rating},
-        ${req.query.summary},
-        ${req.query.body},
-        ${req.query.recommend},
-        ${req.query.reviewer_name},
-        ${req.query.reviewer_email},
-        ${new Date()}
-        );
-      RETURNING id;
+    INSERT INTO recommended (product_id, recommend, count)
+    VALUES (${req.query.product_id}, ${req.query.recommend}, ${1});
+
+    INSERT INTO reviews (product_id, rating, summary, body, recommend, reviewer_name, reviewer_email, date, helpfulness, reported)
+    VALUES (
+      ${Number(req.query.product_id)},
+      ${Number(req.query.rating)},
+      ${String(req.query.summary)},
+      ${String(req.query.body)},
+      ${String(req.query.recommend)},
+      ${req.query.reviewer_name},
+      ${req.query.reviewer_email},
+      ${date},
+      0,
+      'false'
+      )
+    RETURNING id;
+
     INSERT INTO photos (review_id, url)
-      VALUES (
-      (SELECT id FROM reviews WHERE product_id = 20000000),
-      unnest('${req.query.photos}'::text[]));
-    SET helpfulness = helpfulness + 1
-    WHERE id = ${review_id};
+    VALUES (
+    (SELECT MAX(id) FROM reviews WHERE product_id = ${req.query.product_id}),
+    unnest(${photos}::text[]));
 
     COMMIT;
   `, (err, result) => {
+    console.log(err);
     res.send(result);
   });
 });
