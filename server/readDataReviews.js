@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+/* eslint-disable no-unused-vars */
 const { Client } = require('pg');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
@@ -103,7 +105,6 @@ async function charsETL() {
 
 // charsETL();
 
-
 async function charsReviewsETL() {
   await db.connect();
 
@@ -158,7 +159,6 @@ async function buildRecommendTable() {
 
 // buildRecommendTable();
 
-
 async function buildCharacteristicsTable() {
   await db.connect();
 
@@ -179,38 +179,33 @@ async function buildCharacteristicsTable() {
     .finally(() => db.end());
 }
 
-buildCharacteristicsTable();
-// buildRecommendTable();
+// buildCharacteristicsTable();
 
-// charsReviewsETL();
-
-/*
-async function queryTestReviews(id) {
+async function addProductIndex() {
   await db.connect();
 
-  let reviews;
-
-  // await db
-  //   .query(`
-  //   SELECT * FROM (SELECT * FROM reviews r WHERE r.id IN (${id})) a LEFT JOIN photos p ON a.id = p.review_id;
-  //   `)
-  //   .then((res) => { console.log(res.rows); })
-  //   .catch((e) => console.log(e))
-  //   .finally(() => db.end());
-
-  await db
-    .query(`
-      SELECT * FROM characteristics c LEFT JOIN characteristic_reviews cr ON c.id = cr.characteristic_id WHERE c.product_id = ${id}
-    `)
-
-  // await db
-  //   .query(`
-  //       SELECT * FROM photos WHERE review_id = ${id};
-  //     `)
-  //     .then((res) => { review = res; } )
-  //     .catch((e) => console.log(e))
+  db
+    .query('CREATE INDEX product_index ON reviews (product_id);')
+    .then((res) => console.log(res))
+    .catch((e) => console.log(e))
+    .finally(() => db.end());
 }
 
-// queryTestReviews(5);
+// addProductIndex();
 
-*/
+async function addProductIndexChars() {
+  await db.connect();
+
+  await db
+    .query('CREATE INDEX rec_product_index ON recommended (product_id);')
+    .then((res) => console.log(res))
+    .catch((e) => console.log(e));
+
+  await db
+    .query('CREATE INDEX ch_product_index ON characteristics_count (product_id);')
+    .then((res) => console.log(res))
+    .catch((e) => console.log(e))
+    .finally(() => db.end());
+}
+
+module.exports = db;

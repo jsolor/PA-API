@@ -4,7 +4,7 @@ const router = express.Router();
 
 // example routes that will be prefixed
 router.get('/', (req, res) => {
-  res.send('Get all users');
+  res.send('Get all users QA');
 });
 
 router.get('/:id', (req, res) => {
