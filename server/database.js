@@ -165,12 +165,6 @@ async function productsETL2() {
 
 async function makeIndexes() {
   client
-    .query(`
-      CREATE INDEX idx_product_id
-      ON products(id)
-    `)
-    .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on products'));
-  client
   .query(`
     CREATE INDEX idx_feats_product_id
     ON features(product_id)
@@ -226,16 +220,16 @@ async function getProduct(pid) {
 
 async function getProducts(page = 1, count = 5) {
   // TODO: use offset //////////////////////////////////////////////
-  const start = ((page - 1) * count) + 1;
-  const range = [...Array(count).keys()].map((n, index) => start + index);
-
   const prods = {};
   return client
     .query(`
       SELECT
         products.id, products.name, products.slogan, products.description, products.default_price, categories.category
-      FROM products, categories
-      WHERE products.id IN (${range.toString()}) AND products.category_id = categories.id
+      FROM products
+      LEFT JOIN categories
+      ON products.category_id = categories.id
+      ORDER BY products.id ASC
+      LIMIT ${count} OFFSET ${count * (page - 1)}
     `)
     .then(({ rows }) => rows);
 }
@@ -249,16 +243,6 @@ async function getRelatedProducts(pid) {
     `)
     .then(({ rows }) => rows.map((row) => row.related_product_id));
 }
-
-// async function getProductPhotos(sid) {
-//   return client
-//     .query(`
-//       SELECT url, thumbnail_url
-//       FROM photos
-//       WHERE style_id = ${sid}
-//     `)
-//     .then(({ rows }) => rows);
-// }
 
 async function getProductStyles(pid) {
   return client
