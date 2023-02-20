@@ -163,29 +163,69 @@ async function productsETL2() {
     `));
 }
 
-async function getProduct(pid) {
-  const prod = {};
+async function makeIndexes() {
+  client
+    .query(`
+      CREATE INDEX idx_product_id
+      ON products(id)
+    `)
+    .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on products'));
+  client
+  .query(`
+    CREATE INDEX idx_feats_product_id
+    ON features(product_id)
+  `)
+  .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on features'));
+  client
+  .query(`
+    CREATE INDEX idx_styles_product_id
+    ON styles(product_id)
+  `)
+  .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on styles'));
+  client
+  .query(`
+    CREATE INDEX idx_curr_product_id
+    ON related(current_product_id)
+  `)
+  .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on related products'));
+  client
+  .query(`
+    CREATE INDEX idx_photos_style_id
+    ON photos(style_id)
+  `)
+  .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on photos'));
+  client
+  .query(`
+    CREATE INDEX idx_skus_style_id
+    ON skus(style_id)
+  `)
+  .catch((err) => console.log('ERROR: ', err, '\ncouldn\'t make index on skus'));
+}
 
+async function getProduct(pid) {
   return client
     .query(`
       SELECT
-        products.id, products.name, products.slogan, products.description, products.default_price, categories.category
-      FROM products, categories
-      WHERE products.id = ${pid} AND products.category_id = categories.id
+        p.id, p.name, p.slogan, p.description, p.default_price, category, ARRAY_AGG(
+          properties
+        ) AS features
+      FROM products p
+      LEFT JOIN (
+        SELECT product_id, json_build_object('feature',feature, 'value',value) AS properties
+        FROM features f
+        WHERE product_id = ${pid}
+      ) l
+      ON p.id = l.product_id
+      LEFT JOIN categories c
+      ON p.category_id = c.id
+      WHERE p.id = ${pid}
+      GROUP BY p.id, p.name, p.slogan, p.description, p.default_price, category
     `)
-    .then(({ rows }) => prod.info = rows)
-    .then(() => client.query(`
-      SELECT feature, value
-      FROM features
-      WHERE product_id = ${pid}
-    `))
-    .then(({ rows }) => {
-      prod.info.features = rows;
-      return prod;
-    });
+    .then(({ rows }) => rows);
 }
 
 async function getProducts(page = 1, count = 5) {
+  // TODO: use offset //////////////////////////////////////////////
   const start = ((page - 1) * count) + 1;
   const range = [...Array(count).keys()].map((n, index) => start + index);
 
@@ -210,9 +250,65 @@ async function getRelatedProducts(pid) {
     .then(({ rows }) => rows.map((row) => row.related_product_id));
 }
 
+// async function getProductPhotos(sid) {
+//   return client
+//     .query(`
+//       SELECT url, thumbnail_url
+//       FROM photos
+//       WHERE style_id = ${sid}
+//     `)
+//     .then(({ rows }) => rows);
+// }
+
+async function getProductStyles(pid) {
+  return client
+    .query(`
+      SELECT s.product_id, ARRAY_AGG(
+        json_build_object(
+          'style_id', s.style_id,
+          'name', s.name,
+          'original_price', s.original_price,
+          'default', s.default_style,
+          'photos', parr,
+          'skus', skusobj
+        )
+      ) results
+      FROM styles s
+      LEFT JOIN (
+        SELECT style_id, ARRAY_AGG(
+          json_build_object(
+            'url', ph.url,
+            'thumbnail_url', ph.thumbnail_url
+          )
+        ) AS parr
+        FROM photos ph
+        GROUP BY style_id
+      ) flj
+      ON flj.style_id = s.style_id
+      LEFT JOIN (
+        SELECT style_id, json_agg(
+          json_build_object(sk.id,
+            json_build_object(
+              'quantity', sk.quantity,
+              'size', sk.size
+            )
+          )
+        ) AS skusobj
+        FROM skus sk
+        GROUP BY style_id
+      ) slj
+      ON slj.style_id = s.style_id
+      WHERE s.product_id = ${pid}
+      GROUP BY s.product_id
+    `)
+    .then(({ rows }) => rows);
+}
+
 // productsETL();
 // productsETL2();
+// makeIndexes();
 module.exports.client = client;
 module.exports.getProduct = getProduct;
 module.exports.getProducts = getProducts;
 module.exports.getRelatedProducts = getRelatedProducts;
+module.exports.getProductStyles = getProductStyles;
