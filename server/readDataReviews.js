@@ -232,4 +232,16 @@ async function addProductIndexChars() {
     .finally(() => db.end());
 }
 
+async function addReviewsIndexToPhotos() {
+  await db.connect();
+
+  db
+    .query('CREATE INDEX photos_reviews_index ON photos (review_id);')
+    .then((res) => console.log(res))
+    .catch((e) => console.log(e))
+    .finally(() => db.end());
+}
+
+// addReviewsIndexToPhotos();
+
 module.exports = db;
