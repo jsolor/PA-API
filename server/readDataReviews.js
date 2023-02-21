@@ -244,4 +244,12 @@ async function addReviewsIndexToPhotos() {
 
 // addReviewsIndexToPhotos();
 
+async function dropCharAndRecommendTables() {
+  console.log('dropping tables');
+  db
+    .query('DROP TABLE IF EXISTS characteristic_reviews, characteristics, recommended_count;');
+}
+
+// dropCharAndRecommendTables();
+
 module.exports = db;
