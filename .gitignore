@@ -9,3 +9,4 @@ coverage
 yarn-error.log
 server/TestData/*
 server/Reviews/*
+server/Models/*

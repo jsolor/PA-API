@@ -15,16 +15,17 @@ router.get('/reviews', (req, res) => {
   };
 
   db.query(`
-    SELECT product_id, r.id, rating, summary, body, date, recommend, reviewer_name, reviewer_email,
-      reported, response, helpfulness, array_agg(url) as photos
-    FROM reviews r
-    LEFT JOIN
-    (
+  SELECT product_id, r.id, rating, summary, body, date, recommend, reviewer_name, reviewer_email,
+  reported, response, helpfulness, array_agg(url) as photos
+    FROM
+    (SELECT * FROM reviews WHERE product_id IN (${req.query.product_id}) AND reported = 'false') r
+      LEFT JOIN
+      (
       SELECT review_id, url
-      FROM photos
-    ) p
-    ON r.id = p.review_id
-    WHERE r.product_id IN (${req.query.product_id}) AND r.reported = 'false'
+        FROM photos
+        WHERE review_id IN (SELECT id FROM reviews WHERE product_id IN (${req.query.product_id}))
+      ) p
+      ON r.id = p.review_id
     GROUP BY  product_id, r.id, rating, summary, body, date, recommend, reviewer_name,
       reviewer_email, reported, response, helpfulness
     ORDER BY ${sort[req.query.sort]} DESC
@@ -33,6 +34,21 @@ router.get('/reviews', (req, res) => {
     res.send(results.rows);
   });
 });
+
+// SELECT product_id, r.id, rating, summary, body, date, recommend, reviewer_name, reviewer_email,
+//       reported, response, helpfulness, array_agg(url) as photos
+//     FROM reviews r
+//     LEFT JOIN
+//     (
+//       SELECT review_id, url
+//       FROM photos
+//     ) p
+//     ON r.id = p.review_id
+//     WHERE r.product_id IN (${req.query.product_id}) AND r.reported = 'false'
+//     GROUP BY  product_id, r.id, rating, summary, body, date, recommend, reviewer_name,
+//       reviewer_email, reported, response, helpfulness
+//     ORDER BY ${sort[req.query.sort]} DESC
+//     LIMIT ${req.query.count};
 
 router.get('/meta', (req, res) => {
   console.log('getting request for reviews meta');
