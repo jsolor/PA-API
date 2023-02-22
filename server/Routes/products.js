@@ -1,7 +1,7 @@
 const express = require('express');
 const {
   getProduct, getProducts, getRelatedProducts, getProductStyles
-} = require('../../db/controllers/products');
+} = require('./productsRouteQueries');
 
 const router = express.Router();
 

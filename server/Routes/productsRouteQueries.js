@@ -1,4 +1,4 @@
-const db = require('../index');
+const db = require('../database');
 
 async function getProduct(pid) {
   return db
@@ -82,7 +82,7 @@ async function getProductStyles(pid) {
         FROM skus sk
         GROUP BY sk.style_id
       ) slj ON slj.style_id = s.style_id
-      WHERE s.product_id = 8
+      WHERE s.product_id = ${pid}
       GROUP BY s.product_id
     `)
     .then(({ rows }) => rows[0]);

@@ -1,4 +1,6 @@
-const db = require('./index');
+const db = require('../database');
+
+const dataPath = '../../Data/';
 
 async function buildTables() {
   db
@@ -13,7 +15,7 @@ async function buildTables() {
       )`)
     .then(() => db.query(`
       COPY products(id, name, slogan, description, category, default_price)
-        FROM '${path.join(__dirname, '../Data/product.csv')}'
+        FROM '${path.join(__dirname, dataPath + 'product.csv')}'
         DELIMITER ','
         CSV HEADER
     `))
@@ -27,7 +29,7 @@ async function buildTables() {
     )`))
     .then(() => db.query(`
       COPY features(id, product_id, feature, value)
-        FROM '${path.join(__dirname, '../Data/features.csv')}'
+        FROM '${path.join(__dirname, dataPath + 'features.csv')}'
         DELIMITER ','
         CSV HEADER
     `))
@@ -43,7 +45,7 @@ async function buildTables() {
     )`))
     .then(() => db.query(`
       COPY styles(id, product_id, name, sale_price, original_price, default_style)
-        FROM '${path.join(__dirname, '../Data/styles.csv')}'
+        FROM '${path.join(__dirname, dataPath + 'styles.csv')}'
         DELIMITER ','
         CSV HEADER
     `))
@@ -57,7 +59,7 @@ async function buildTables() {
     )`))
     .then(() => db.query(`
       COPY photos(id, style_id, url, thumbnail_url)
-        FROM '${path.join(__dirname, '../Data/photos.csv')}'
+        FROM '${path.join(__dirname, dataPath + 'photos.csv')}'
         DELIMITER ','
         CSV HEADER
     `))
@@ -71,7 +73,7 @@ async function buildTables() {
     )`))
     .then(() => db.query(`
       COPY skus(id, style_id, size, quantity)
-        FROM '${path.join(__dirname, '../Data/skus.csv')}'
+        FROM '${path.join(__dirname, dataPath + 'skus.csv')}'
         DELIMITER ','
         CSV HEADER
     `))
@@ -85,7 +87,7 @@ async function buildTables() {
     )`))
     .then(() => db.query(`
       COPY related(id, current_product_id, related_product_id)
-        FROM '${path.join(__dirname, '../Data/related.csv')}'
+        FROM '${path.join(__dirname, dataPath + 'related.csv')}'
         DELIMITER ','
         CSV HEADER
         NULL '0'
