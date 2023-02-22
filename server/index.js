@@ -3,7 +3,6 @@ const axios = require('axios');
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const { client } = require('./database');
 const productsRouter = require('./Routes/products');
 
 const app = express();
@@ -248,13 +247,10 @@ app.post('/report', (req, res) => {
 });
 
 // app.listen(8081);
-const PORT = 8081;
-app.listen(PORT, (err) => {
+// const PORT = 8081;
+app.listen(8081/*process.env.PORT*/, (err) => {
   if (err) console.log('ERROR IN SERVER SETUP');
-  console.log('Listening at http://localhost:8081');
-  client.connect();
+  console.log(`Listening at http://localhost:8081...`);
 });
 
-app.on('end', () => {
-  client.end();
-});
+module.exports = app;
