@@ -246,8 +246,13 @@ async function addReviewsIndexToPhotos() {
 
 async function dropCharAndRecommendTables() {
   console.log('dropping tables');
-  db
-    .query('DROP TABLE IF EXISTS characteristic_reviews, characteristics, recommended_count;');
+  await db.connect();
+
+  await db
+    .query('DROP TABLE IF EXISTS characteristic_reviews, characteristics, recommended_count;')
+    .then((res) => console.log(res))
+    .catch((e) => console.log(e))
+    .finally(() => db.end());
 }
 
 // dropCharAndRecommendTables();
