@@ -1,17 +1,15 @@
-const mongoose = require('mongoose');
+/* eslint-disable max-len */
+/* eslint-disable no-unused-vars */
+const { Client } = require('pg');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect('mongodb://127.0.0.1:27017/sdc');
-    console.log('MongoDB connected...');
-  } catch (error) {
-    console.log(`error: ${error}`);
-    process.exit(1);
-  }
-};
+const db = new Client({
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  port: process.env.PGPORT,
+});
 
-const closeDB = () => {
-  mongoose.connection.close();
-};
-
-module.exports = { connectDB, closeDB };
+module.exports = db;

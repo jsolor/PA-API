@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable camelcase */
 const express = require('express');
-const db = require('../readDataReviews');
+const db = require('../database');
 
 const router = express.Router();
 
@@ -150,16 +150,12 @@ router.put('/reviews/:review_id/report', (req, res) => {
 });
 
 router.post('/reviews', (req, res) => {
-  // console.log('adding a new review');
-
   const date = Math.floor(new Date().getTime() / 1000).toString();
   let {
     photos, product_id, rating, summary, body,
     recommend, reviewer_name, reviewer_email,
   } = req.body;
   photos = `'{${JSON.stringify(photos).slice(2, -2)}}'`;
-
-  console.log(typeof product_id, product_id);
 
   db.query(`
     BEGIN;
