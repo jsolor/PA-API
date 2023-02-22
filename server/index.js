@@ -6,6 +6,8 @@ const cors = require('cors');
 const client = require('./database');
 const productsRouter = require('./Routes/products');
 
+// const reviewsRouter = require('./Routes/reviewsRoutes');
+
 const app = express();
 
 // ----- Middleware ----- //
@@ -14,6 +16,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.urlencoded({ extended: true }));
+
+// app.use('/', reviewsRouter);
 
 // ----- Routes ----- //
 

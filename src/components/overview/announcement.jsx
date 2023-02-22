@@ -17,7 +17,6 @@ export default function Banner({
       const N = indecesArray.length;
       indecesArray.push(indecesArray[N - 1] + style.photos.length);
     });
-
     const indexStyles = styles.map((style, index) => ({ style, index, imageIndex: indecesArray[index] }));
     const saleStyles = indexStyles.filter((item) => (item.style.sale_price !== 'null'));
     setSales(saleStyles);
