@@ -9,7 +9,7 @@ const path = require('path');
 const cors = require('cors');
 const qAndARouter = require('./Routes/qAndARoutes');
 const reviewsRouter = require('./Routes/reviewsRoutes');
-const reviewsDb = require('./readDataReviews');
+const reviewsDb = require('./database');
 
 const app = express();
 

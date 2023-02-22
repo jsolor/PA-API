@@ -3,14 +3,7 @@
 const { Client } = require('pg');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
-
-const db = new Client({
-  user: process.env.PGUSER,
-  host: process.env.PGHOST,
-  database: process.env.PGDATABASE,
-  password: process.env.PGPASSWORD,
-  port: process.env.PGPORT,
-});
+const db = require('../database');
 
 async function reviewsETL() {
   await db.connect();
@@ -47,8 +40,6 @@ async function reviewsETL() {
     .finally(() => db.end());
 }
 
-// productsETL();
-
 async function photosETL() {
   await db.connect();
 
@@ -75,8 +66,6 @@ async function photosETL() {
     .finally(() => db.end());
 }
 
-// photosETL();
-
 async function charsETL() {
   await db.connect();
 
@@ -102,8 +91,6 @@ async function charsETL() {
     .catch((e) => console.log(e))
     .finally(() => db.end());
 }
-
-// charsETL();
 
 async function charsReviewsETL() {
   await db.connect();
@@ -132,8 +119,6 @@ async function charsReviewsETL() {
     .finally(() => db.end());
 }
 
-// charsReviewsETL();
-
 async function buildRecommendTable() {
   await db.connect();
 
@@ -157,33 +142,7 @@ async function buildRecommendTable() {
     .finally(() => db.end());
 }
 
-// buildRecommendTable();
-
-async function buildRecommendCountTable() {
-  await db.connect();
-
-  await db
-    .query('DROP TABLE IF EXISTS recommended_count;');
-
-  db
-    .query(`
-      SELECT product_id, recommend, count
-      INTO recommended_count
-      FROM (
-        SELECT
-          product_id,
-          recommend,
-          count(recommend) as count
-          FROM reviews GROUP BY product_id, recommend
-      ) as s;`)
-    .then((res) => console.log(res))
-    .catch((e) => console.log(e))
-    .finally(() => db.end());
-}
-
-// buildRecommendCountTable();
-
-async function buildCharacteristicsTable() {
+async function buildCharacteristicsCountTable() {
   await db.connect();
 
   await db
@@ -203,8 +162,6 @@ async function buildCharacteristicsTable() {
     .finally(() => db.end());
 }
 
-// buildCharacteristicsTable();
-
 async function addProductIndex() {
   await db.connect();
 
@@ -214,8 +171,6 @@ async function addProductIndex() {
     .catch((e) => console.log(e))
     .finally(() => db.end());
 }
-
-// addProductIndex();
 
 async function addProductIndexChars() {
   await db.connect();
@@ -242,14 +197,32 @@ async function addReviewsIndexToPhotos() {
     .finally(() => db.end());
 }
 
-// addReviewsIndexToPhotos();
-
 async function dropCharAndRecommendTables() {
   console.log('dropping tables');
-  db
-    .query('DROP TABLE IF EXISTS characteristic_reviews, characteristics, recommended_count;');
+  await db.connect();
+
+  await db
+    .query('DROP TABLE IF EXISTS characteristic_reviews, characteristics, recommended_count;')
+    .then((res) => console.log(res))
+    .catch((e) => console.log(e))
+    .finally(() => db.end());
 }
 
-// dropCharAndRecommendTables();
+async function fullETL() {
+  try {
+    await reviewsETL();
+    await photosETL();
+    await charsETL();
+    await charsReviewsETL();
+    await buildRecommendTable();
+    await buildCharacteristicsCountTable();
+    await addProductIndex();
+    await addProductIndexChars();
+    await addReviewsIndexToPhotos();
+    await dropCharAndRecommendTables();
+  } catch (error) {
+    console.log(error);
+  }
+}
 
-module.exports = db;
+module.exports = fullETL;
