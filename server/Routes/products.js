@@ -1,5 +1,7 @@
 const express = require('express');
-const { getProduct, getProducts, getRelatedProducts, getProductStyles } = require('../database');
+const {
+  getProduct, getProducts, getRelatedProducts, getProductStyles
+} = require('../../db/controllers/products');
 
 const router = express.Router();
 
@@ -7,9 +9,9 @@ const router = express.Router();
 
 router.get('/', (req, res) => {
   getProducts(req.params.page, req.params.count)
-    .then((info) => {
+    .then((data) => {
       res.status(200);
-      res.send(info);
+      res.send(data);
       res.end();
     })
     .catch(() => res.send('Failed to get products'));
@@ -17,9 +19,9 @@ router.get('/', (req, res) => {
 
 router.get('/:id/related', (req, res) => {
   getRelatedProducts(req.params.id)
-    .then((info) => {
+    .then((data) => {
       res.status(200);
-      res.send(info);
+      res.send(data);
       res.end();
     })
     .catch(() => res.send('Failed to get related products'));
@@ -27,19 +29,19 @@ router.get('/:id/related', (req, res) => {
 
 router.get('/:id/styles', (req, res) => {
   getProductStyles(req.params.id)
-    .then((info) => {
+    .then((data) => {
       res.status(200);
-      res.send(info);
+      res.send(data);
       res.end();
     })
     .catch(() => res.send('Failed to get styles'));
 });
 
-router.get('/:id/?*', (req, res) => {
+router.get('/:id/', (req, res) => {
   getProduct(req.params.id)
-    .then((info) => {
+    .then((data) => {
       res.status(200);
-      res.send(info);
+      res.send(data);
       res.end();
     })
     .catch(() => res.send('Failed to get product'));
