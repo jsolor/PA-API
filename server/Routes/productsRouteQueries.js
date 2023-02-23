@@ -49,41 +49,43 @@ async function getRelatedProducts(pid) {
 async function getProductStyles(pid) {
   return db
     .query(`
-      SELECT s.product_id, ARRAY_AGG(
+    SELECT s.product_id, ARRAY_AGG(
+      jsonb_build_object(
+        'style_id', s.style_id,
+        'name', s.name,
+        'original_price', s.original_price,
+        'sale_price', s.sale_price,
+        'default', s.default_style,
+        'photos', parr,
+        'skus', skusobj
+      )
+    ) results
+    FROM styles s
+    LEFT JOIN (
+      SELECT ph.style_id, ARRAY_AGG(
         jsonb_build_object(
-          'style_id', s.style_id,
-          'name', s.name,
-          'original_price', s.original_price,
-          'sale_price', s.sale_price,
-          'default', s.default_style,
-          'photos', parr,
-          'skus', skusobj
+          'url', ph.url,
+          'thumbnail_url', ph.thumbnail_url
         )
-      ) results
-      FROM styles s
-      LEFT JOIN (
-        SELECT ph.style_id, ARRAY_AGG(
-          jsonb_build_object(
-            'url', ph.url,
-            'thumbnail_url', ph.thumbnail_url
-          )
-        ) AS parr
-        FROM photos ph
-        GROUP BY ph.style_id
-      ) flj ON flj.style_id = s.style_id
-      LEFT JOIN (
-        SELECT sk.style_id, jsonb_object_agg(
-          sk.id,
-          jsonb_build_object(
-            'quantity', sk.quantity,
-            'size', sk.size
-          )
-        ) AS skusobj
-        FROM skus sk
-        GROUP BY sk.style_id
-      ) slj ON slj.style_id = s.style_id
-      WHERE s.product_id = ${pid}
-      GROUP BY s.product_id
+      ) AS parr
+      FROM photos ph
+      WHERE ph.style_id IN (select s.style_id from styles s where s.product_id = ${pid})
+      GROUP BY ph.style_id
+    ) flj ON flj.style_id = s.style_id
+    LEFT JOIN (
+      SELECT sk.style_id, jsonb_object_agg(
+        sk.id,
+        jsonb_build_object(
+          'quantity', sk.quantity,
+          'size', sk.size
+        )
+      ) AS skusobj
+      FROM skus sk
+      WHERE sk.style_id IN (select s.style_id from styles s where s.product_id = ${pid})
+      GROUP BY sk.style_id
+    ) slj ON slj.style_id = s.style_id
+    WHERE s.product_id = ${pid}
+    GROUP BY s.product_id
     `)
     .then(({ rows }) => rows[0]);
 }
