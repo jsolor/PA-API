@@ -2,7 +2,8 @@ const db = require('../database');
 
 async function getProduct(pid) {
   return db
-    .query(`
+    .query(
+      `
       SELECT
         p.id, p.name, p.slogan, p.description, p.default_price, category, ARRAY_AGG(
           properties
@@ -11,82 +12,100 @@ async function getProduct(pid) {
       LEFT JOIN (
         SELECT product_id, jsonb_build_object('feature',feature, 'value',value) AS properties
         FROM features f
-        WHERE product_id = ${pid}
+        WHERE product_id = $1
       ) l
       ON p.id = l.product_id
       LEFT JOIN categories c
       ON p.category_id = c.id
-      WHERE p.id = ${pid}
+      WHERE p.id = $1
       GROUP BY p.id, p.name, p.slogan, p.description, p.default_price, category
-    `)
+    `,
+      [pid],
+    )
     .then(({ rows }) => rows[0]);
 }
 
 async function getProducts(page = 1, count = 5) {
   return db
-    .query(`
+    .query(
+      `
       SELECT
         products.id, products.name, products.slogan, products.description, products.default_price, categories.category
       FROM products
       LEFT JOIN categories
       ON products.category_id = categories.id
       ORDER BY products.id ASC
-      LIMIT ${count} OFFSET ${count * (page - 1)}
-    `)
+      LIMIT $1 OFFSET $2}
+    `,
+      [count, count * (page - 1)],
+    )
     .then(({ rows }) => rows);
 }
 
 async function getRelatedProducts(pid) {
   return db
-    .query(`
+    .query(
+      `
       SELECT related_product_id
       FROM related
-      WHERE current_product_id = ${pid}
-    `)
+      WHERE current_product_id = $1
+    `,
+      [pid],
+    )
     .then(({ rows }) => rows.map((row) => row.related_product_id));
 }
 
 async function getProductStyles(pid) {
   return db
     .query(`
-    SELECT s.product_id, ARRAY_AGG(
-      jsonb_build_object(
-        'style_id', s.style_id,
-        'name', s.name,
-        'original_price', s.original_price,
-        'sale_price', s.sale_price,
-        'default', s.default_style,
-        'photos', parr,
-        'skus', skusobj
-      )
-    ) results
-    FROM styles s
-    LEFT JOIN (
-      SELECT ph.style_id, ARRAY_AGG(
+      SELECT s.product_id, ARRAY_AGG(
         jsonb_build_object(
-          'url', ph.url,
-          'thumbnail_url', ph.thumbnail_url
+          'style_id', s.style_id,
+          'name', s.name,
+          'original_price', s.original_price,
+          'sale_price', s.sale_price,
+          'default', s.default_style,
+          'photos', parr,
+          'skus', skusobj
         )
-      ) AS parr
-      FROM photos ph
-      WHERE ph.style_id IN (select s.style_id from styles s where s.product_id = ${pid})
-      GROUP BY ph.style_id
-    ) flj ON flj.style_id = s.style_id
-    LEFT JOIN (
-      SELECT sk.style_id, jsonb_object_agg(
-        sk.id,
-        jsonb_build_object(
-          'quantity', sk.quantity,
-          'size', sk.size
+      ) results
+      FROM styles s
+      LEFT JOIN (
+        SELECT ph.style_id, ARRAY_AGG(
+          jsonb_build_object(
+            'url', ph.url,
+            'thumbnail_url', ph.thumbnail_url
+          )
+        ) AS parr
+        FROM photos ph
+        WHERE ph.style_id IN (
+          SELECT s.style_id
+          FROM styles s
+          WHERE s.product_id = $1
         )
-      ) AS skusobj
-      FROM skus sk
-      WHERE sk.style_id IN (select s.style_id from styles s where s.product_id = ${pid})
-      GROUP BY sk.style_id
-    ) slj ON slj.style_id = s.style_id
-    WHERE s.product_id = ${pid}
-    GROUP BY s.product_id
-    `)
+        GROUP BY ph.style_id
+      ) flj ON flj.style_id = s.style_id
+      LEFT JOIN (
+        SELECT sk.style_id, jsonb_object_agg(
+          sk.id,
+          jsonb_build_object(
+            'quantity', sk.quantity,
+            'size', sk.size
+          )
+        ) AS skusobj
+        FROM skus sk
+        WHERE sk.style_id IN (
+          SELECT s.style_id
+          FROM styles s
+          WHERE s.product_id = $1
+        )
+        GROUP BY sk.style_id
+      ) slj ON slj.style_id = s.style_id
+      WHERE s.product_id = $1
+      GROUP BY s.product_id
+      `,
+      [pid],
+    )
     .then(({ rows }) => rows[0]);
 }
 
@@ -94,3 +113,4 @@ module.exports.getProduct = getProduct;
 module.exports.getProducts = getProducts;
 module.exports.getRelatedProducts = getRelatedProducts;
 module.exports.getProductStyles = getProductStyles;
+

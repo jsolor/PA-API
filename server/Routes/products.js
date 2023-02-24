@@ -8,7 +8,8 @@ const router = express.Router();
 // ----- Products - Routes ----- //
 
 router.get('/', (req, res) => {
-  getProducts(req.params.page, req.params.count)
+  // getProducts(req.params.page, req.params.count)
+  getProducts(req.query.page, req.query.count)
     .then((data) => {
       res.status(200);
       res.send(data);
