@@ -251,10 +251,9 @@ app.post('/report', (req, res) => {
     .catch(() => res.send('Error occurred when reporting'));
 });
 
-const PORT = 8081;
-app.listen(PORT/*process.env.PORT*/, (err) => {
+app.listen(process.env.PORT, (err) => {
   if (err) console.log('error in server setup');
-  console.log(`Listening at http://localhost:${PORT}...`);
+  console.log(`Listening at http://localhost:${process.env.PORT}...`);
   client.connect((err) => {
     if (err) {
       console.log('error connecting to db');
