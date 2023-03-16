@@ -3,7 +3,7 @@ const axios = require('axios');
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const client = require('./database');
+const client = require('../db/index');
 const productsRouter = require('./Routes/products');
 
 const app = express();
