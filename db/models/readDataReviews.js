@@ -3,7 +3,7 @@
 const { Client } = require('pg');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
-const db = require('../database');
+const db = require('../index');
 
 async function reviewsETL() {
   await db.connect();

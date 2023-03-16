@@ -6,8 +6,6 @@ const cors = require('cors');
 const client = require('./database');
 const productsRouter = require('./Routes/products');
 
-// const reviewsRouter = require('./Routes/reviewsRoutes');
-
 const app = express();
 
 // ----- Middleware ----- //
@@ -17,8 +15,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.urlencoded({ extended: true }));
 
-// app.use('/', reviewsRouter);
-
 // ----- Routes ----- //
 
 // ----- Products ----- //
@@ -26,8 +22,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/products', productsRouter);
 
 app.post('/cart', (req, res) => {
-  console.log('getting cart post request');
-  console.log(`"${req.body.body}"`);
   axios({
     method: 'post',
     url: 'https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfe/cart',
@@ -47,7 +41,6 @@ app.post('/cart', (req, res) => {
 // -------------------------
 
 app.get('/reviews', (req, res) => {
-  console.log('GET request received from /reviews');
   const { sort, product_id, count } = req.query;
 
   axios.get('https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfe/reviews/', {
@@ -55,9 +48,9 @@ app.get('/reviews', (req, res) => {
       Authorization: process.env.AUTH_SECRET,
     },
     params: {
-      product_id, // no review product is 37339
+      product_id,
       sort,
-      count, // figure out how to do max count
+      count,
     },
   })
     .then(({ data }) => {
@@ -69,7 +62,6 @@ app.get('/reviews', (req, res) => {
 });
 
 app.post('/reviews', (req, res) => {
-  console.log('POST request received from /reviews');
   const { data } = req.body;
 
   axios.post('https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfe/reviews/', data, {
@@ -86,7 +78,6 @@ app.post('/reviews', (req, res) => {
 });
 
 app.get('/reviews/meta', (req, res) => {
-  console.log('GET request received from /reviews/meta');
   const { product_id } = req.query;
 
   axios.get('https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfe/reviews/meta', {
@@ -105,9 +96,7 @@ app.get('/reviews/meta', (req, res) => {
 });
 
 app.put('/reviews/:review_id/helpful', (req, res) => {
-  console.log('PUT request received from /reviews/:review_id/helpful');
   const { review_id } = req.params;
-  // console.log(review_id);
 
   axios.put(`https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfe/reviews/${review_id}/helpful`, null, {
     headers: {
@@ -127,9 +116,7 @@ app.put('/reviews/:review_id/helpful', (req, res) => {
 });
 
 app.put('/reviews/:review_id/report', (req, res) => {
-  console.log('PUT request received from /reviews/:review_id/report');
   const { review_id } = req.params;
-  // console.log(review_id);
 
   axios.put(`https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfe/reviews/${review_id}/report`, null, {
     headers: {
@@ -167,7 +154,6 @@ app.get('/questions', (req, res) => {
 });
 
 app.post('/questions', (req, res) => {
-  console.log(`"${req.body.body}"`);
   axios({
     method: 'post',
     url: 'https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfe/qa/questions',
@@ -204,7 +190,6 @@ app.get('/answers', (req, res) => {
 });
 
 app.post('/answers', (req, res) => {
-  console.log(req.body);
   axios({
     method: 'post',
     url: `https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfe/qa/questions/${req.body.question_id}/answers`,
@@ -238,7 +223,6 @@ app.post('/helpful', (req, res) => {
 });
 
 app.post('/report', (req, res) => {
-  console.log(req.body);
   axios.put(`https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfe/qa/answers/${req.body.answerId}/report`, null, {
     headers: {
       Authorization: process.env.AUTH_SECRET,
@@ -266,6 +250,5 @@ app.listen(process.env.PORT, (err) => {
 app.on('end', () => {
   client.end();
 });
-
 
 module.exports = app;

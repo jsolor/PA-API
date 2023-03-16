@@ -1,4 +1,4 @@
-const db = require('../database');
+const db = require('../index');
 
 async function getProduct(pid) {
   return db
